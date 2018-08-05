@@ -23,16 +23,25 @@ module Main where
 
     -- オブジェクトをクリックしたときの力
     power :: Float
-    power = 5
+    power = 10
+
+    size :: Vector
+    size = (50, 50)
      
     initialize :: GameObject
-    initialize = GameObject (Transform (0,0) 0 (1,1)) (50,50) rigidbodyWithGravity
+    initialize = GameObject 
+        (Transform (0,100) 0 (1,1)) 
+        (mulSV 1.5 size)
+        (rigidbodyWithGravity $ Just (0, 100))
 
     draw :: GameObject -> Picture
     draw go = pictures 
-        [   trs (tf go) $ rectangleSolid (width $ bounds go) (height $ bounds go)
-        ,   translate (-windowWidth) 0 . scale 0.5 0.5 $ text $ "Vel:" ++ (show (vel $ body go)) ++ "Acc:" ++ (show (acc $ body go))
-        -- ,   rectangleSolid (width $ bounds go) (height $ bounds go)
+        [   trs (tf go) $ 
+                rectangleSolid  (width size) 
+                                (height size)
+        ,   translate (-windowWidth) 0 . scale 0.5 0.5 $ 
+                text $          "Vel:" ++ (show (vel $ body go)) ++ 
+                                "Acc:" ++ (show (acc $ body go))
         ]
 
     update :: Event -> GameObject -> GameObject
@@ -40,12 +49,16 @@ module Main where
     update _ go = go
 
     updateWithClick :: Key -> KeyState -> Vector -> GameObject -> GameObject
-    updateWithClick (MouseButton LeftButton) ks mouse go = if ks == Down then hit mouse go else go
+    updateWithClick (MouseButton LeftButton) ks mouse go = 
+        if ks == Down 
+        then hit mouse go 
+        else go
     updateWithClick _ _ _ go = go
 
     hit :: Vector -> GameObject -> GameObject
-    hit mouse go | inObject go mouse =  let d = diffV (pos $ tf go) mouse 
-                                        in  go {body = addSpeed (body go) (mulSV (-power) d)}
+    hit mouse go | inObject go mouse = 
+                    let d = diffV (pos $ tf go) mouse 
+                    in  go {body = addSpeed (body go) (mulSV (-power) d)}
                  | otherwise = go
 
     next :: Float -> GameObject -> GameObject

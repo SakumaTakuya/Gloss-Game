@@ -6,7 +6,8 @@ module Games
     ,   addSpeed
     ,   GameObject(..)
     ,   simulatePhysics
-    ,   inObject )
+    ,   inObject 
+    )
 where
 
     import Graphics.Gloss
@@ -14,15 +15,17 @@ where
     import Data
 
     gravity :: Vector
-    gravity = (0, -9.8)
+    gravity = (0, -9.8 * 5) --リアルな重力だと小さすぎたため
 
     data Rigidbody = Rigidbody
         {   acc     :: Vector
         ,   vel     :: Vector
         }
 
-    rigidbodyWithGravity :: Rigidbody
-    rigidbodyWithGravity = Rigidbody gravity (0, 0)
+    rigidbodyWithGravity :: Maybe Vector -> Rigidbody
+    rigidbodyWithGravity mv = case mv of
+                                Just v  -> Rigidbody gravity v
+                                Nothing -> Rigidbody gravity (0,0)
 
     addForce :: Rigidbody -> Vector -> Rigidbody
     addForce rb pow = rb { acc = addV (acc rb) pow }
@@ -39,7 +42,8 @@ where
     data GameObject = GameObject
         {   tf      :: Transform
         ,   bounds  :: Vector
-        ,   body    :: Rigidbody }
+        ,   body    :: Rigidbody 
+        }
 
     simulatePhysics :: Float -> GameObject -> GameObject
     simulatePhysics dt go = 
@@ -47,12 +51,15 @@ where
             newtf = updateTransform (tf go) newrb dt
         in  go
             {   tf = newtf
-            ,   body = newrb }
+            ,   body = newrb 
+            }
 
     inObject :: GameObject -> Vector -> Bool
     inObject go p = 
         let local = localV p (tf go)
-        in  if  (( (width $ bounds go)/2) >= (x local) && ( (height $ bounds go)/2) >= (y local)) &&
-                ((-(width $ bounds go)/2) <= (x local) && (-(height $ bounds go)/2) <= (y local))
+        in  if  ( (width  $ bounds go)/2) >= (x local) && 
+                ( (height $ bounds go)/2) >= (y local) &&
+                (-(width  $ bounds go)/2) <= (x local) && 
+                (-(height $ bounds go)/2) <= (y local)
             then True
             else False

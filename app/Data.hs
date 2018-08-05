@@ -24,11 +24,14 @@ module Data where
     data Transform = Transform 
         { pos :: Vector
         , rot :: Float
-        , sca :: Vector }
+        , sca :: Vector 
+        }
 
     --ワールド座標からオブジェクト座標に変換する
     trs :: Transform -> (Picture -> Picture)
-    trs t = translate (x $ pos t) (y $ pos t) . rotate (rot t) . scale (x $ sca t) (y $ sca t)
+    trs t = translate (x $ pos t) (y $ pos t) . 
+            rotate (rot t) . 
+            scale (x $ sca t) (y $ sca t)
 
     --オブジェクト座標上の点を作成する
     trsV :: Vector -> Transform -> Vector
