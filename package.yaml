@@ -24,6 +24,8 @@ dependencies:
 
 library:
   source-dirs: src
+  dependencies:
+    - gloss
 
 executables:
   gloss-tutorial-exe:

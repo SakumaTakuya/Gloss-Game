@@ -4,6 +4,7 @@ module Games
     ,   rigidbodyWithGravity
     ,   addForce
     ,   addSpeed
+    ,   addImpulse
     ,   GameObject(..)
     ,   simulatePhysics
     ,   inObject 
@@ -18,26 +19,41 @@ where
     gravity = (0, -9.8 * 5) --リアルな重力だと小さすぎたため
 
     data Rigidbody = Rigidbody
-        {   acc     :: Vector
-        ,   vel     :: Vector
+        {   acceleration     :: Vector
+        ,   velocity         :: Vector
+        ,   angularVelocity  :: Float
+        ,   mass             :: Float
         }
 
-    rigidbodyWithGravity :: Maybe Vector -> Rigidbody
-    rigidbodyWithGravity mv = case mv of
-                                Just v  -> Rigidbody gravity v
-                                Nothing -> Rigidbody gravity (0,0)
+    rigidbodyWithGravity :: Float -> Maybe Vector -> Rigidbody
+    rigidbodyWithGravity mass mv = case mv of
+                                Just v  -> Rigidbody gravity    v  0 mass  
+                                Nothing -> Rigidbody gravity (0,0) 0 mass
 
     addForce :: Rigidbody -> Vector -> Rigidbody
-    addForce rb pow = rb { acc = addV (acc rb) pow }
+    addForce rb pow = rb { acceleration = addV (acceleration rb) pow }
     
+    -- 物理法則には従っていない(従わせると一切回転しないため)
+    addImpulse :: Rigidbody -> Vector -> Float -> Float -> Rigidbody
+    addImpulse rb pow dist r = rb
+        {   velocity        = addV (velocity rb) $ mulSV (1/(mass rb)) pow
+        ,   angularVelocity = (angularVelocity rb) + 
+                              dist * (x pow) * 2 / (mass rb) / dist / dist  
+        }
+
     addSpeed :: Rigidbody -> Vector -> Rigidbody
-    addSpeed rb speed = rb { vel = addV (vel rb) speed }
+    addSpeed rb speed = rb { velocity = addV (velocity rb) speed }
 
     updateVelocity :: Rigidbody -> Float -> Rigidbody
-    updateVelocity rb dt = rb { vel = addV (vel rb) . mulSV dt $ acc rb }
+    updateVelocity rb dt = rb 
+        {   velocity = addV (velocity rb) . mulSV dt $ acceleration rb 
+        }
 
     updateTransform :: Transform -> Rigidbody -> Float -> Transform
-    updateTransform tf rb dt = tf{ pos = addV (pos tf) . mulSV dt $ vel rb}
+    updateTransform tf rb dt = tf
+        {   pos = addV (pos tf) . mulSV dt $ velocity rb
+        ,   rot = (rot tf) + (dt * angularVelocity rb)
+        }
 
     data GameObject = GameObject
         {   tf      :: Transform
